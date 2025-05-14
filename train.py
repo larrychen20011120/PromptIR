@@ -18,10 +18,11 @@ from lightning.pytorch.callbacks import ModelCheckpoint
 
 
 class PromptIRModel(pl.LightningModule):
-    def __init__(self):
+    def __init__(self, opt):
         super().__init__()
         self.net = PromptIR(decoder=True)
         self.loss_fn  = nn.L1Loss()
+        self.opt = opt
     
     def forward(self,x):
         return self.net(x)
@@ -42,8 +43,12 @@ class PromptIRModel(pl.LightningModule):
         lr = scheduler.get_lr()
     
     def configure_optimizers(self):
-        optimizer = optim.AdamW(self.parameters(), lr=2e-4)
-        scheduler = LinearWarmupCosineAnnealingLR(optimizer=optimizer,warmup_epochs=15,max_epochs=150)
+        optimizer = optim.AdamW(self.parameters(), lr=self.opt.lr)
+        scheduler = LinearWarmupCosineAnnealingLR(
+            optimizer=optimizer,
+            warmup_epochs=self.opt.warmup_epochs,
+            max_epochs=self.opt.epochs,
+        )
 
         return [optimizer],[scheduler]
 
@@ -65,7 +70,7 @@ def main():
     trainloader = DataLoader(trainset, batch_size=opt.batch_size, pin_memory=True, shuffle=True,
                              drop_last=True, num_workers=opt.num_workers)
     
-    model = PromptIRModel()
+    model = PromptIRModel(opt)
     
     trainer = pl.Trainer( max_epochs=opt.epochs,accelerator="gpu",devices=opt.num_gpus,strategy="ddp_find_unused_parameters_true",logger=logger,callbacks=[checkpoint_callback])
     trainer.fit(model=model, train_dataloaders=trainloader)

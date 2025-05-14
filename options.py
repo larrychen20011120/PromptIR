@@ -6,6 +6,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--cuda', type=int, default=0)
 
 parser.add_argument('--epochs', type=int, default=120, help='maximum number of epochs to train the total model.')
+parser.add_argument('--warmup_epochs', type=int, default=15, help='number of epochs to warmup the learning rate to the given one')
 parser.add_argument('--batch_size', type=int,default=8,help="Batch size to use per GPU")
 parser.add_argument('--lr', type=float, default=2e-4, help='learning rate of encoder.')
 
